@@ -32,17 +32,3 @@ function Get-UnsupportedAsrRule {
     }
 }
 Get-UnsupportedAsrRule
-
-
-<#
-$senseLogPath = [System.Environment]::ExpandEnvironmentVariables("%SystemRoot%\System32\Winevt\Logs\Microsoft-Windows-SENSE%4Operational.evtx")
-$senseLog = Get-WinEvent -Path $senseLogPath -FilterXPath "*[System/EventID=2001]"
-$regexPattern = '[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}'
-foreach ($event in $senseLog) {
-    $properties = $event.properties
-    if ($properties.value -match $regexPattern){
-        $properties
-    }
-    
-}
-#>
