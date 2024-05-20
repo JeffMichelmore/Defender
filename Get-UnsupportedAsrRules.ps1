@@ -1,4 +1,4 @@
-function Get-UnsupportedAsrRule {
+function Get-UnsupportedASRs {
     param (
         [string]$senseLogPath
     )
@@ -8,27 +8,23 @@ function Get-UnsupportedAsrRule {
     }
    
     $senseLog = Get-WinEvent -Path $senseLogPath
-    $affectedRules = @()
     foreach ($log in $senseLog){
-        # check if $log.message contains an unsupported ASR rule
-        $regexPattern = '[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}'
-        if ($log.properties.value -like '*SENSECM: WRN: ASR: at least one requested rule is not supported by this platform*' -and $log.properties.value -match $regexPattern){
-            $affectedRule = $matches[0]
-            
-            if ($affectedRules -notcontains $affectedRule) {
-                $affectedRules += $affectedRule
-            }
+        # check if $log contains an unsupported ASR rule
+        $regexPattern = '(?i)[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}'
+        if ($log.properties.value -like '*SENSECM: WRN: ASR:VerAssign returns false*' -and $log.properties.value -match $regexPattern){
+
+            Write-Host "ASR policy failure event found:`r`n" -ForegroundColor Red
+            Write-Host $log.TimeCreated -ForegroundColor Green
+            Write-Host $log.Properties.value
+            Write-Host "`r`nRefer to below documentation for supported ASR rule matrix:"
+            Write-Host "https://learn.microsoft.com/en-us/defender-endpoint/attack-surface-reduction-rules-reference?view=o365-worldwide#asr-rule-to-guid-matrix" -ForegroundColor Cyan
+            Break
         }
-    }
-    if ($affectedRules.Count -gt 0) {
-        Write-Host "Unsupported ASR rules found:"
-        foreach ($rule in $affectedRules) {
-            Write-Host $rule
+        else {
+            Write-Host "No ASR policy failures found." -ForegroundColor Green
         }
-        Write-Host "`nASR Rule Name to GUID Matrix:"
-        Write-Host "https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/attack-surface-reduction-rules-reference?view=o365-worldwide#asr-rule-to-guid-matrix"
-    } else {
-        Write-Host "No unsupported ASR rules found."
+
     }
 }
-Get-UnsupportedAsrRule
+
+Get-UnsupportedASRs
